@@ -163,6 +163,14 @@ function JoinRoomContent() {
         });
       }
       const data = await response.json();
+      // Always set user_session cookie with canonical user.id from backend
+      setClientUserSession({
+        userId: data.user.id, // Use backend user.id
+        name: submitName,
+        avatar: submitAvatar,
+        adminRooms: session?.adminRooms || [],
+        currentRoom: data.roomId,
+      });
       router.push(`/room/${data.roomId}`);
     } catch (error) {
       console.error("Error joining room:", error);

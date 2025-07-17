@@ -162,6 +162,14 @@ export default function CreateRoom() {
         });
       }
       const data = await response.json();
+      // Always set user_session cookie with canonical user.id from backend
+      setClientUserSession({
+        userId: data.user.id, // Use backend user.id
+        name: submitName,
+        avatar: submitAvatar,
+        adminRooms: session?.adminRooms || [data.roomId],
+        currentRoom: data.roomId,
+      });
       router.push(`/room/${data.roomId}`);
     } catch (error) {
       console.error("Error creating room:", error);
