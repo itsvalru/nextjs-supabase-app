@@ -526,9 +526,15 @@ export async function POST(request: NextRequest) {
             .eq("id", roomId);
         }
       } else {
-        // Determine next mode
-        const mode = MODES[(nextRoundNum - 1) % 3];
-        console.log("Next mode:", mode);
+        // Determine next mode based on selected game modes
+        const selectedModes = room.game_settings?.gameModes || [
+          "guess_me",
+          "would_you_rather",
+          "dare",
+        ];
+        const modeIndex = (nextRoundNum - 1) % selectedModes.length;
+        const mode = selectedModes[modeIndex];
+        console.log("Next mode:", mode, "from selected modes:", selectedModes);
 
         // For dare, determine target player
         let dareTargetUserId = null;

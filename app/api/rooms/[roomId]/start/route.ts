@@ -28,14 +28,21 @@ export async function POST(
       );
     }
 
-    // Always start with a guess_me question
+    // Get room settings to determine starting mode
+    const selectedModes = room.game_settings?.gameModes || [
+      "guess_me",
+      "would_you_rather",
+      "dare",
+    ];
+    const startingMode = selectedModes[0]; // Start with the first selected mode
+
     const { data: questions, error: qError } = await supabase
       .from("questions")
       .select("*")
-      .eq("type", "guess_me");
+      .eq("type", startingMode);
     if (qError || !questions || questions.length === 0) {
       return NextResponse.json(
-        { error: "No 'guess_me' questions found" },
+        { error: `No '${startingMode}' questions found` },
         { status: 500 }
       );
     }
@@ -51,7 +58,7 @@ export async function POST(
         room_id: roomId,
         round_number: nextRound,
         question_id: question.id,
-        mode: "guess_me",
+        mode: startingMode,
         answers: {},
         guesses: {},
         scores: {},

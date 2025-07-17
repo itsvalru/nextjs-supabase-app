@@ -37,6 +37,7 @@ interface Room {
   game_settings?: {
     totalRounds: number;
     questionCategories: string[];
+    gameModes: string[];
   };
 }
 
@@ -73,6 +74,7 @@ export default function RoomPage() {
       "Fitness",
       "Lifestyle",
     ],
+    gameModes: ["guess_me", "would_you_rather", "dare"],
   };
 
   // Fetch room and current round
@@ -631,6 +633,9 @@ export default function RoomPage() {
                       {room.game_settings?.totalRounds ||
                         defaultSettings.totalRounds}{" "}
                       rounds •
+                      {room.game_settings?.gameModes?.length ||
+                        defaultSettings.gameModes.length}{" "}
+                      modes •
                       {room.game_settings?.questionCategories?.length ||
                         defaultSettings.questionCategories.length}{" "}
                       categories
@@ -720,7 +725,12 @@ export default function RoomPage() {
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         onSave={handleSaveSettings}
-        currentSettings={room?.game_settings || defaultSettings}
+        currentSettings={{
+          ...defaultSettings,
+          ...room?.game_settings,
+          gameModes:
+            room?.game_settings?.gameModes || defaultSettings.gameModes,
+        }}
         isLoading={savingSettings}
       />
     </div>

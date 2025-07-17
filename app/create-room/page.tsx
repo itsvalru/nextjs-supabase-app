@@ -8,10 +8,10 @@ import { getOrCreateGuestId } from "@/lib/client-cookies";
 const AVATAR_OPTIONS = [
   "😊",
   "😎",
-  "🤓",
+  "🍆",
   "😍",
   "😇",
-  "🤠",
+  "😽",
   "👻",
   "🦄",
   "🐱",
@@ -20,16 +20,16 @@ const AVATAR_OPTIONS = [
   "🐼",
   "🌸",
   "🌺",
-  "🌻",
+  "💗",
   "🌹",
   "🌷",
-  "💐",
-  "🍀",
-  "🌿",
-  "🌱",
-  "🌵",
-  "🌴",
-  "🌳",
+  "🐈",
+  "🐟",
+  "🐺",
+  "🦇",
+  "😈",
+  "🤪",
+  "💀",
 ];
 
 interface UserSession {
@@ -42,24 +42,42 @@ interface UserSession {
 
 function getClientUserSession(): UserSession | null {
   if (typeof window === "undefined") return null;
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; user_session=`);
-  if (parts.length === 2) {
-    try {
-      const sessionValue = parts.pop()?.split(";").shift();
-      return sessionValue ? JSON.parse(sessionValue) : null;
-    } catch {
-      return null;
+
+  try {
+    // More robust cookie parsing
+    const cookies = document.cookie.split(";");
+    const userSessionCookie = cookies.find((cookie) =>
+      cookie.trim().startsWith("user_session=")
+    );
+
+    if (userSessionCookie) {
+      const sessionValue = userSessionCookie.split("=")[1];
+      if (sessionValue) {
+        const parsed = JSON.parse(decodeURIComponent(sessionValue));
+        // Validate the session has required fields
+        if (parsed && parsed.userId && parsed.name) {
+          return parsed;
+        }
+      }
     }
+  } catch (error) {
+    console.warn("Failed to parse user session cookie:", error);
   }
+
   return null;
 }
 
 function setClientUserSession(session: UserSession) {
   if (typeof document === "undefined") return;
-  document.cookie = `user_session=${JSON.stringify(session)}; path=/; max-age=${
-    60 * 60 * 24 * 30
-  }`;
+
+  try {
+    const sessionValue = encodeURIComponent(JSON.stringify(session));
+    document.cookie = `user_session=${sessionValue}; path=/; max-age=${
+      60 * 60 * 24 * 30
+    }; SameSite=Lax`;
+  } catch (error) {
+    console.error("Failed to set user session cookie:", error);
+  }
 }
 
 export default function CreateRoom() {
@@ -76,11 +94,17 @@ export default function CreateRoom() {
 
   useEffect(() => {
     const sess = getClientUserSession();
-    if (sess) {
+    if (sess && sess.name && sess.userId) {
       setSession(sess);
       setName(sess.name);
       setAvatar(sess.avatar || "");
     } else {
+      // Clear any corrupted session
+      if (sess) {
+        console.warn("Clearing corrupted session:", sess);
+        document.cookie =
+          "user_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      }
       // Preselect a random emoji for new users
       const randomEmoji =
         AVATAR_OPTIONS[Math.floor(Math.random() * AVATAR_OPTIONS.length)];

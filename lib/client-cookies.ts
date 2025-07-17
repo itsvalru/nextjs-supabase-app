@@ -1,6 +1,19 @@
 export function getClientCookie(name: string): string | undefined {
-  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-  return match ? match[2] : undefined;
+  if (typeof document === "undefined") return undefined;
+
+  try {
+    const cookies = document.cookie.split(";");
+    const cookie = cookies.find((c) => c.trim().startsWith(`${name}=`));
+
+    if (cookie) {
+      const value = cookie.split("=")[1];
+      return value ? decodeURIComponent(value) : undefined;
+    }
+  } catch (error) {
+    console.warn(`Failed to get cookie ${name}:`, error);
+  }
+
+  return undefined;
 }
 
 export function setClientCookie(
@@ -8,10 +21,22 @@ export function setClientCookie(
   value: string,
   options?: { path?: string; maxAge?: number }
 ) {
-  let cookie = `${name}=${value};`;
-  if (options?.path) cookie += `path=${options.path};`;
-  if (options?.maxAge) cookie += `max-age=${options.maxAge};`;
-  document.cookie = cookie;
+  if (typeof document === "undefined") return;
+
+  try {
+    const encodedValue = encodeURIComponent(value);
+    let cookie = `${name}=${encodedValue};`;
+
+    if (options?.path) cookie += `path=${options.path};`;
+    if (options?.maxAge) cookie += `max-age=${options.maxAge};`;
+
+    // Add SameSite for better security
+    cookie += `SameSite=Lax;`;
+
+    document.cookie = cookie;
+  } catch (error) {
+    console.error(`Failed to set cookie ${name}:`, error);
+  }
 }
 
 export function getOrCreateGuestId(): string {

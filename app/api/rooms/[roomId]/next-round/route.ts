@@ -30,11 +30,18 @@ export async function POST(
     const usedIds: string[] = room.used_question_ids || [];
     const dareIndex: number = room.dare_rotation_index || 0;
     const roundNum = (room.current_round || 0) + 1;
-    if (roundNum > 9) {
+    const maxRounds = room.game_settings?.totalRounds || 9;
+    if (roundNum > maxRounds) {
       return NextResponse.json({ error: "Game is finished" }, { status: 400 });
     }
-    // Determine mode
-    const mode = MODES[(roundNum - 1) % 3];
+    // Determine mode based on selected game modes
+    const selectedModes = room.game_settings?.gameModes || [
+      "guess_me",
+      "would_you_rather",
+      "dare",
+    ];
+    const modeIndex = (roundNum - 1) % selectedModes.length;
+    const mode = selectedModes[modeIndex];
     // For dare, determine target player
     let dareTargetUserId = null;
     if (mode === "dare") {
