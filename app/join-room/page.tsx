@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getOrCreateGuestId } from "@/lib/client-cookies";
@@ -80,7 +80,7 @@ function setClientUserSession(session: UserSession) {
   }
 }
 
-export default function JoinRoom() {
+function JoinRoomContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [roomCode, setRoomCode] = useState<string>(
@@ -289,5 +289,22 @@ export default function JoinRoom() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function JoinRoom() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-50 to-pink-200 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 text-center">
+            <div className="animate-spin rounded-full border-b-2 border-pink-500 h-8 w-8 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <JoinRoomContent />
+    </Suspense>
   );
 }
