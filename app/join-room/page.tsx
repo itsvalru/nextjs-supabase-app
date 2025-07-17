@@ -123,6 +123,7 @@ function JoinRoomContent() {
     setIsLoading(true);
     try {
       const guestId = getOrCreateGuestId();
+      console.log("Debug - Join room using guest ID:", guestId);
       let submitName = name;
       let submitAvatar = avatar;
       // If not editing and session exists, use session values

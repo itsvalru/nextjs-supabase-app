@@ -121,6 +121,7 @@ export default function CreateRoom() {
     setIsLoading(true);
     try {
       const guestId = getOrCreateGuestId();
+      console.log("Debug - Create room using guest ID:", guestId);
       let submitName = name;
       let submitAvatar = avatar;
       // If not editing and session exists, use session values

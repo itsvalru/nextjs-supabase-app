@@ -56,6 +56,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log("Debug - Created user:", user);
+    console.log("Debug - User ID:", user.id);
+    console.log("Debug - Request userId:", userId);
+
     // Create room in Supabase
     const { data: room, error: roomError } = await supabase
       .from("rooms")
@@ -69,6 +73,9 @@ export async function POST(request: NextRequest) {
       })
       .select()
       .single();
+
+    console.log("Debug - Created room:", room);
+    console.log("Debug - Room admin_user_id:", room?.admin_user_id);
 
     if (roomError) {
       console.error("Error creating room:", roomError);

@@ -59,8 +59,61 @@ export default function RoomPage() {
   const fetchTimeout = useRef<NodeJS.Timeout | null>(null);
   const channelRef = useRef<any>(null);
 
-  // Get userId from cookie
-  const userId = typeof window !== "undefined" ? getOrCreateGuestId() : "";
+  // Get userId from cookie with fallback
+  const getUserId = () => {
+    if (typeof window === "undefined") return "";
+
+    // Try to get from user_session first (more reliable)
+    try {
+      const cookies = document.cookie.split(";");
+      const userSessionCookie = cookies.find((cookie) =>
+        cookie.trim().startsWith("user_session=")
+      );
+
+      if (userSessionCookie) {
+        const sessionValue = userSessionCookie.split("=")[1];
+        if (sessionValue) {
+          const parsed = JSON.parse(decodeURIComponent(sessionValue));
+          if (parsed && parsed.userId) {
+            console.log("Debug - Found user ID from session:", parsed.userId);
+            return parsed.userId;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to parse user session:", error);
+    }
+
+    // Fallback to guest_id
+    const guestId = getOrCreateGuestId();
+    console.log("Debug - Using guest ID:", guestId);
+    return guestId;
+  };
+
+  const userId = getUserId();
+
+  // Debug logging for production issues
+  useEffect(() => {
+    if (typeof window !== "undefined" && room) {
+      console.log("Debug - User ID:", userId);
+      console.log("Debug - Room admin:", room.admin_user_id);
+      console.log("Debug - Is admin:", userId === room.admin_user_id);
+      console.log("Debug - Room state:", room.game_state);
+      console.log("Debug - Players count:", room.players.length);
+
+      // Check if user is in the room players list
+      const userInRoom = room.players.find((p: any) => p.user_id === userId);
+      console.log("Debug - User in room:", userInRoom);
+
+      // If user is not found in room but should be admin, try to refresh
+      if (!userInRoom && userId && userId === room.admin_user_id) {
+        console.log(
+          "Debug - User should be admin but not found in room, refreshing..."
+        );
+        fetchRoom();
+      }
+    }
+  }, [userId, room]);
 
   // Default settings
   const defaultSettings = {

@@ -79,6 +79,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log("Debug - Join: Created user:", user);
+    console.log("Debug - Join: User ID:", user.id);
+    console.log("Debug - Join: Request userId:", userId);
+
     // Determine available role
     const existingRoles = players?.map((p) => p.role) || [];
     let availableRole: "you" | "girlfriend" | "potential_partner";

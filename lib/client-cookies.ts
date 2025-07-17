@@ -42,11 +42,35 @@ export function setClientCookie(
 export function getOrCreateGuestId(): string {
   let guestId = getClientCookie("guest_id");
   if (!guestId) {
-    guestId = crypto.randomUUID();
+    // Fallback for environments where crypto.randomUUID() might not be available
+    try {
+      guestId = crypto.randomUUID();
+    } catch (error) {
+      // Fallback to a simple UUID generation
+      guestId = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+        /[xy]/g,
+        function (c) {
+          const r = (Math.random() * 16) | 0;
+          const v = c === "x" ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        }
+      );
+    }
+
+    // Set cookie with more robust options
     setClientCookie("guest_id", guestId, {
       path: "/",
       maxAge: 60 * 60 * 24 * 365,
     });
+
+    // Also try to set it immediately in case there are timing issues
+    try {
+      document.cookie = `guest_id=${encodeURIComponent(
+        guestId
+      )}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+    } catch (error) {
+      console.warn("Failed to set guest_id cookie:", error);
+    }
   }
   return guestId;
 }
